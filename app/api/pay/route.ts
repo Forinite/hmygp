@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
   const { commission_id, lots, provider } = await req.json()
   const n = Math.floor(Number(lots))
   const { data: s } = await db.from('lot_status').select('*').eq('commission_id', commission_id).single()
-  if (!['opay', 'paystack'].includes(provider) || !s || !['funding', 'awaiting', 'open'].includes(s.status) || n < 1 || n > s.total_lots - s.lots_paid)
+  if (!['opay', 'paystack', 'monnify'].includes(provider) || !s || !['funding', 'awaiting', 'open'].includes(s.status) || n < 1 || n > s.total_lots - s.lots_paid)
     return NextResponse.json({ error: 'Those lots are not available' }, { status: 400 })
   const amount = n * s.lot_price
   const ref = 'hmygp_' + crypto.randomUUID().replaceAll('-', '')

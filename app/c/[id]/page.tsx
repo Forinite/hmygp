@@ -18,7 +18,7 @@ export default function Commission() {
   if (!s) return <main className="sub">Loading…</main>
   const act = async (fn: string, args: any = {}) => { setErr(''); const { error } = await sb.rpc(fn, { cid: id, ...args }); if (error) setErr(error.message); else if (['refund_my_lots', 'cancel_task'].includes(fn) || args.accept === false) await api('/api/refund', { commission_id: id }); load() }
   const collect = async () => { const r = await api('/api/payout', { commission_id: id }); setPayMsg(r.error || (r.status === 'sent' ? 'Sent to your bank.' : 'Your payment is on its way (' + r.status + ').')) }
-  const pay = async (p: 'opay' | 'paystack') => { try { await startPay(id, n, p) } catch (e: any) { setErr(e.message) } }
+  const pay = async (p: 'opay' | 'paystack' | 'monnify') => { try { await startPay(id, n, p) } catch (e: any) { setErr(e.message) } }
   const left = s.total_lots - s.lots_paid, open = ['funding', 'awaiting', 'open'].includes(s.status)
   const isDoer = c?.doer === user?.id, isReq = c?.requester === user?.id, member = isDoer || isReq || mine > 0
   return (<main>
@@ -30,7 +30,7 @@ export default function Commission() {
     {c?.note && isDoer && s.status !== 'funding' && <div className="panel"><b>Note from the payer</b><p>{c.note}</p></div>}
     {user && open && left > 0 && !isDoer && <div className="panel"><label>Lots to pay ({naira(n * s.lot_price)})</label>
       <select value={n} onChange={e => setN(+e.target.value)}>{Array.from({ length: left }, (_, i) => i + 1).map(x => <option key={x}>{x}</option>)}</select>
-      <div className="row"><button className="go" onClick={() => pay('opay')}>Pay with OPay</button><button onClick={() => pay('paystack')}>Pay with card</button></div></div>}
+      <div className="row"><button className="go" onClick={() => pay('opay')}>Pay with OPay</button><button onClick={() => pay('monnify')}>Monnify</button><button onClick={() => pay('paystack')}>Pay with card</button></div></div>}
     {open && mine > 0 && <button className="ghost" onClick={() => act('refund_my_lots')}>Refund my {mine} lot{mine > 1 ? 's' : ''} and leave</button>}
     {s.status === 'awaiting' && isDoer && <div className="row"><button className="go" onClick={() => act('respond', { accept: true })}>Accept</button><button onClick={() => act('respond', { accept: false })}>Decline and refund</button></div>}
     {s.status === 'open' && user && !member && <button className="go" onClick={() => act('take_task')}>Take this task</button>}

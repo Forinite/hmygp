@@ -12,7 +12,7 @@ export function useUser() {
   }, [])
   return u
 }
-export async function startPay(commissionId: string, lots: number, provider: 'opay' | 'paystack') {
+export async function startPay(commissionId: string, lots: number, provider: 'opay' | 'paystack' | 'monnify') {
   const { data } = await sb.auth.getSession()
   const r = await fetch('/api/pay', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token}` },
     body: JSON.stringify({ commission_id: commissionId, lots, provider }) })

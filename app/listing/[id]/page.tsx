@@ -10,7 +10,7 @@ export default function Listing() {
   useEffect(() => { sb.from('feed').select('*').eq('id', id).single().then(({ data }) => setL(data)) }, [id])
   if (!l) return <main className="sub">Loading…</main>
   const lot = Math.ceil(l.price / total)
-  async function pay(p: 'opay' | 'paystack') {
+  async function pay(p: 'opay' | 'paystack' | 'monnify') {
     setBusy(true); setErr('')
     const { data: cid, error } = await sb.rpc('create_commission', { p_listing: id, p_note: note, p_lots: total })
     if (error) { setBusy(false); return setErr(error.message) }
@@ -24,6 +24,6 @@ export default function Listing() {
         <div><label>Lots you pay</label><select value={mine} onChange={e => setMine(+e.target.value)}>{Array.from({ length: total }, (_, i) => i + 1).map(n => <option key={n}>{n}</option>)}</select></div></div>
       <p className="sub">{naira(lot)} per lot. You pay <b>{naira(lot * mine)}</b> now into escrow. {total > 1 && 'Share the next page so others can pay the rest.'}</p>
       {err && <p className="err">{err}</p>}
-      <div className="row"><button className="go" disabled={busy} onClick={() => pay('opay')}>Pay with OPay</button><button disabled={busy} onClick={() => pay('paystack')}>Pay with card</button></div></div>}
+      <div className="row"><button className="go" disabled={busy} onClick={() => pay('opay')}>Pay with OPay</button><button disabled={busy} onClick={() => pay('monnify')}>Monnify</button><button disabled={busy} onClick={() => pay('paystack')}>Pay with card</button></div></div>}
   </main>)
 }
