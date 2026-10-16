@@ -20,3 +20,8 @@ export async function startPay(commissionId: string, lots: number, provider: 'op
   if (!r.ok) throw new Error(j.error || 'Payment failed')
   window.location.href = j.url
 }
+export async function api(path: string, body: any) {
+  const { data } = await sb.auth.getSession()
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token}` }, body: JSON.stringify(body) })
+  return r.json()
+}

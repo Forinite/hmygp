@@ -25,3 +25,12 @@ export async function creditPayment(ref: string, paidNaira: number) {
   if (!p || p.amount !== paidNaira) return false
   await db.rpc('record_payment', { p_ref: ref }); return true
 }
+
+export const ps = (path: string, body?: any) =>
+  fetch('https://api.paystack.co' + path, { method: body ? 'POST' : 'GET',
+    headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined }).then(r => r.json())
+export async function authUser(req: Request) {
+  const token = req.headers.get('authorization')?.replace('Bearer ', '') ?? ''
+  const { data } = await admin().auth.getUser(token); return data.user
+}

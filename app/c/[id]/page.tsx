@@ -3,12 +3,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { sb, naira } from '@/lib/supabase'
-import { useUser, startPay } from '@/lib/hooks'
+import { useUser, startPay, api } from '@/lib/hooks'
 import Chat from '@/components/Chat'
 const LABEL: any = { funding: 'Waiting for lots to be paid', awaiting: 'Waiting for the doer to accept', open: 'Fully funded. Waiting for someone to take it', accepted: 'In progress', done: 'Done', declined: 'Declined and refunded', cancelled: 'Cancelled and refunded' }
 export default function Commission() {
   const { id } = useParams<{ id: string }>(); const user = useUser()
-  const [s, setS] = useState<any>(null); const [c, setC] = useState<any>(null); const [mine, setMine] = useState(0); const [n, setN] = useState(1); const [err, setErr] = useState('')
+  const [s, setS] = useState<any>(null); const [c, setC] = useState<any>(null); const [mine, setMine] = useState(0); const [n, setN] = useState(1); const [err, setErr] = useState(''); const [payMsg, setPayMsg] = useState('')
   const load = useCallback(async () => {
     const { data } = await sb.from('lot_status').select('*').eq('commission_id', id).single(); setS(data)
     const { data: p } = await sb.from('commissions').select('*').eq('id', id).maybeSingle(); setC(p)
@@ -16,7 +16,8 @@ export default function Commission() {
   }, [id])
   useEffect(() => { load() }, [load, user])
   if (!s) return <main className="sub">Loading…</main>
-  const act = async (fn: string, args: any = {}) => { setErr(''); const { error } = await sb.rpc(fn, { cid: id, ...args }); if (error) setErr(error.message); load() }
+  const act = async (fn: string, args: any = {}) => { setErr(''); const { error } = await sb.rpc(fn, { cid: id, ...args }); if (error) setErr(error.message); else if (['refund_my_lots', 'cancel_task'].includes(fn) || args.accept === false) await api('/api/refund', { commission_id: id }); load() }
+  const collect = async () => { const r = await api('/api/payout', { commission_id: id }); setPayMsg(r.error || (r.status === 'sent' ? 'Sent to your bank.' : 'Your payment is on its way (' + r.status + ').')) }
   const pay = async (p: 'opay' | 'paystack') => { try { await startPay(id, n, p) } catch (e: any) { setErr(e.message) } }
   const left = s.total_lots - s.lots_paid, open = ['funding', 'awaiting', 'open'].includes(s.status)
   const isDoer = c?.doer === user?.id, isReq = c?.requester === user?.id, member = isDoer || isReq || mine > 0
@@ -37,5 +38,6 @@ export default function Commission() {
       <Chat cid={id} me={user.id} />
       <p className="sub">Doer confirmed: {c?.doer_done ? 'yes' : 'no'} · Requester confirmed: {c?.requester_done ? 'yes' : 'no'}. The chat is deleted once both confirm.</p>
       {(isDoer || isReq) && <div className="row"><button className="go" onClick={() => act('confirm_done')}>Confirm it's done</button>{isDoer && <button onClick={() => act('cancel_task')}>Cancel and refund</button>}</div>}</>}
+    {s.status === 'done' && isDoer && <div className="panel"><b>Your payment</b><p className="sub">{payMsg || 'Both sides confirmed. Collect your money.'}</p><button className="go" onClick={collect}>Send my payment to my bank</button></div>}
   </main>)
 }
