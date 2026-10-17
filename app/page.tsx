@@ -9,7 +9,7 @@ export default async function Home() {
     { '@context': 'https://schema.org', '@type': 'Organization', name: 'HowMuchYouGoPay?', url: SITE, logo: `${SITE}/icons/icon-512.png` }]
   return (<main>
     <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(ld)} />
-    <section className="hero"><h1>Who go do am?<br /><span className="hl">How much you go pay?</span></h1>
+    <section className="hero"><h1><span className="hl">How much you go pay?</span></h1>
       <p className="sub">Pay safely into escrow, get the task done, then release the money. Browse offers or post what you need.</p>
       <div className="row"><Link href="/new" className="btn go">Post a task</Link></div></section>
     <Feed initial={data ?? []} />
