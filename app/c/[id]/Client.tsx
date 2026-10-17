@@ -6,6 +6,7 @@ import { sb, naira } from '@/lib/supabase'
 import { useUser, startPay, api } from '@/lib/hooks'
 import Chat from '@/components/Chat'
 import ShareButton from '@/components/ShareButton'
+import OwnerTools from '@/components/OwnerTools'
 const LABEL: any = { funding: 'Waiting for lots to be paid', awaiting: 'Waiting for the doer to accept', open: 'Fully funded. Waiting for someone to take it', accepted: 'In progress', done: 'Done', declined: 'Declined and refunded', cancelled: 'Cancelled and refunded' }
 export default function Commission({ initial }: { initial?: any }) {
   const { id } = useParams<{ id: string }>(); const user = useUser()
@@ -27,6 +28,7 @@ export default function Commission({ initial }: { initial?: any }) {
     <div className="lots">{Array.from({ length: s.total_lots }, (_, i) => <span key={i} className={'lot' + (i < s.lots_paid ? ' f' : '')} />)}</div>
     <p className="sub">{s.lots_paid} of {s.total_lots} lots paid ({naira(s.lot_price)} each) · {LABEL[s.status]}</p><ShareButton title={s.title} />
     {err && <p className="err">{err}</p>}
+    {s.kind === 'request' && user && c?.requester === user.id && <OwnerTools listing={{ id: s.listing_id, kind: 'request', title: s.title, price: s.price, lots: s.total_lots }} onSaved={load} />}
     {user === null && <Link className="btn pri" href="/login">Sign in to take part</Link>}
     {c?.note && isDoer && s.status !== 'funding' && <div className="panel"><b>Note from the payer</b><p>{c.note}</p></div>}
     {user && open && left > 0 && !isDoer && <div className="panel"><label>Lots to pay ({naira(n * s.lot_price)})</label>

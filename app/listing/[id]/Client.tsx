@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { sb, naira } from '@/lib/supabase'
 import { useUser, startPay } from '@/lib/hooks'
 import ShareButton from '@/components/ShareButton'
+import OwnerTools from '@/components/OwnerTools'
 export default function Listing({ initial }: { initial: any }) {
   const { id } = useParams<{ id: string }>(); const user = useUser(); const r = useRouter()
   const [l, setL] = useState<any>(initial); const [note, setNote] = useState(''); const [total, setTotal] = useState(1); const [mine, setMine] = useState(1); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false)
   useEffect(() => { sb.from('feed').select('*').eq('id', id).single().then(({ data }) => setL(data)) }, [id])
+  const refetch = () => sb.from('feed').select('*').eq('id', id).single().then(({ data }) => data && setL(data))
   if (!l) return <main className="sub">Loading…</main>
   const lot = Math.ceil(l.price / total)
   async function pay(p: 'opay' | 'paystack' | 'monnify') {
@@ -19,7 +21,7 @@ export default function Listing({ initial }: { initial: any }) {
   }
   return (<main>
     <span className="price">{naira(l.price)}</span><h1 style={{ marginTop: 14 }}>{l.title}</h1><p className="sub">by {l.owner_name}</p><ShareButton title={l.title} />
-    {user === null ? <Link className="btn pri" href="/login">Sign in to commission</Link> : <div className="panel">
+    {user && l.owner === user.id ? <OwnerTools listing={{ id: l.id, kind: l.kind, title: l.title, price: l.price }} onSaved={refetch} /> : user === null ? <Link className="btn pri" href="/login">Sign in to commission</Link> : <div className="panel">
       <label>Note to {l.owner_name} (what exactly do you need?)</label><textarea rows={3} value={note} onChange={e => setNote(e.target.value)} />
       <div className="row"><div><label>Split into lots</label><select value={total} onChange={e => { setTotal(+e.target.value); setMine(1) }}>{[1, 2, 3, 4, 5, 10, 20].map(n => <option key={n}>{n}</option>)}</select></div>
         <div><label>Lots you pay</label><select value={mine} onChange={e => setMine(+e.target.value)}>{Array.from({ length: total }, (_, i) => i + 1).map(n => <option key={n}>{n}</option>)}</select></div></div>
